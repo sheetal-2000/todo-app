@@ -34,10 +34,7 @@ const TodoItemsContextProvider = ({ children }) => {
       date: "5/10/2023",
     },
   ];
-  const [todoItems, dispatchAction] = useReducer(
-    todoItemsReducer,
-    todoInitialItems
-  );
+  const [todoItems, dispatchAction] = useReducer(todoItemsReducer, []);
   const addNewItem = (itemName, itemDate) => {
     const newItemAction = {
       type: "NEW_ITEM",
