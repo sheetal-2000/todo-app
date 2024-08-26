@@ -10,9 +10,9 @@ function TodoItems() {
     <div className={styles.itemsContainer}>
       {todoItems.map((items) => (
         <TodoItem
-          key={items.name}
-          todoDate={items.date}
-          todoName={items.name}
+          key={items.todoName}
+          todoDate={items.todoDate}
+          todoName={items.todoName}
         ></TodoItem>
       ))}
     </div>

@@ -1,69 +1,67 @@
-import { createContext, useReducer } from "react";
+import { createContext, useEffect, useState } from "react";
 
 export const TodoItemsContext = createContext({
   todoItems: [],
   addNewItem: () => {},
   deleteItem: () => {},
 });
-let todoItemsReducer = (currState, action) => {
-  let newTodoItems = currState;
-  if (action.type === "NEW_ITEM") {
-    newTodoItems = [
-      ...currState,
-      { name: action.payload.itemName, date: action.payload.itemDate },
-    ];
-  } else if (action.type === "DELETE_ITEM") {
-    newTodoItems = currState.filter(
-      (item) => item.name !== action.payload.itemName
-    );
-  }
-  return newTodoItems;
-};
+
 const TodoItemsContextProvider = ({ children }) => {
-  const todoInitialItems = [
-    {
-      name: "Buy milk",
-      date: "4/10/2023",
-    },
-    {
-      name: "Go to college",
-      date: "4/10/2023",
-    },
-    {
-      name: "Go to home",
-      date: "5/10/2023",
-    },
-  ];
-  const [todoItems, dispatchAction] = useReducer(todoItemsReducer, []);
+  const [todoItems, setTodoItems] = useState([]);
+  const fetchItems = () => {
+    fetch("/api/items")
+      .then((response) => response.json())
+      .then((data) => {
+        if (data && data.length >= 0) {
+          setTodoItems(data);
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching todo items:", error);
+      });
+  };
+  useEffect(() => {
+    fetchItems();
+  }, []);
   const addNewItem = (itemName, itemDate) => {
-    const newItemAction = {
-      type: "NEW_ITEM",
-      payload: {
-        itemName,
-        itemDate,
+    fetch("/api/items", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
       },
-    };
-    dispatchAction(newItemAction);
+      body: JSON.stringify({ todoName: itemName, todoDate: itemDate }),
+    })
+      .then((response) => response.json())
+      .then(() => {
+        fetchItems();
+      })
+      .catch((error) => console.log("Error adding item:", error));
   };
-  const deleteItem = (todoItemName) => {
-    const deleteItemAction = {
-      type: "DELETE_ITEM",
-      payload: {
-        itemName: todoItemName,
-      },
-    };
-    dispatchAction(deleteItemAction);
+  const deleteItem = (itemName) => {
+    fetch(`/api/items/${itemName}`, {
+      method: "DELETE",
+    })
+      .then((response) => {
+        if (response.ok) {
+          fetchItems();
+        } else {
+          console.error("Failed to delete item");
+        }
+      })
+      .catch((error) => console.log("Error deleting item:", error));
   };
+
   return (
     <TodoItemsContext.Provider
       value={{
-        todoItems: todoItems,
-        addNewItem: addNewItem,
-        deleteItem: deleteItem,
+        todoItems,
+        addNewItem,
+        deleteItem,
       }}
     >
       {children}
     </TodoItemsContext.Provider>
   );
 };
+
 export default TodoItemsContextProvider;
